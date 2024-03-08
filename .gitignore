@@ -1,0 +1,32 @@
+# for esp-idf
+# referenced-
+# from: https://github.com/espressif/esp-idf-template/blob/master/.gitignore
+# <---
+build/
+sdkconfig
+sdkconfig.old
+# --->
+
+# for VSCode
+# referenced-
+# from: https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
+# last_commit: https://github.com/github/gitignore/commit/bf3f140cfabe05651c4338ad6e2ca173299f93df
+# <---
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+# c/c++ extension configs for esp-idf
+# from esp-idf vscode estension esample project
+!.vscode/c_cpp_properties.json
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+# --->
+
+/.cache
