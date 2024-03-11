@@ -51,9 +51,9 @@ void start_i2c(void)
 
 void start_spi(void)
 {
-    spi_bus_conf_spi2.miso_io_num = PIN_NUM_MISO;
-    spi_bus_conf_spi2.mosi_io_num = PIN_NUM_MOSI;
-    spi_bus_conf_spi2.sclk_io_num = PIN_NUM_CLK;
+    spi_bus_conf_spi2.miso_io_num = CONFIG_PIN_NUM_MISO;
+    spi_bus_conf_spi2.mosi_io_num = CONFIG_PIN_NUM_MOSI;
+    spi_bus_conf_spi2.sclk_io_num = CONFIG_PIN_NUM_CLK;
     spi_bus_conf_spi2.max_transfer_sz = 1024;
     ESP_ERROR_CHECK(spi_bus_initialize(SPI2_HOST, &spi_bus_conf_spi2, SPI_DMA_CH_AUTO));
 
@@ -61,7 +61,7 @@ void start_spi(void)
     spi_device_conf_1.address_bits = 0;
     spi_device_conf_1.clock_speed_hz = 800*1000;
     spi_device_conf_1.mode = 0;
-    spi_device_conf_1.spics_io_num = PIN_NUM_CS;
+    spi_device_conf_1.spics_io_num = CONFIG_PIN_NUM_CS;
     ESP_ERROR_CHECK(spi_bus_add_device(SPI2_HOST, &spi_device_conf_1, &spi_device_handle_1));
 }
 

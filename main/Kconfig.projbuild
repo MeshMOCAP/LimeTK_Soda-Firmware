@@ -1,0 +1,33 @@
+menu "LimeTK_Soda"
+    menu "I2C configs"
+        config I2C_ADDR
+            hex "I2C device address"
+            default 0x68
+
+        config GPIO_SCL
+            int "I2C SCL gpio"
+            default "2"
+
+        config GPIO_SDA
+            int "I2C SDA gpio"
+            default "3"
+    endmenu
+
+    menu "SPI config"
+        config PIN_NUM_MISO
+            int "gpio of spi.MISO"
+            default 1
+        
+        config PIN_NUM_MOSI
+            int "gpio of spi.MOSI"
+            default 2
+        
+        config PIN_NUM_CLK
+            int "gpio of spi.clock"
+            default 3
+        
+        config PIN_NUM_CS
+            int "gpio of spi.CS(chip select)"
+            default 18
+    endmenu
+endmenu
