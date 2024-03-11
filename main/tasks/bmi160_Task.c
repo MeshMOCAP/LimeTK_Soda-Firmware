@@ -50,29 +50,72 @@ struct bmi160_sensor_data bmi160_gyro;
 
 
 /*
+    static function prototypes
+*/
+
+// delay ms "function"
+static void delay_ms_for_bmi160Api(uint32_t delay_time);
+
+// i2c write function
+static int8_t i2c_write_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len);
+
+// i2c read function
+static int8_t i2c_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len);
+
+// bmi160Api spi write
+int8_t spi_write_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint16_t count);
+
+// bmi160Api spi read
+int8_t spi_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint16_t count);
+
+// init driver config structure
+static void init_bmi160_sensor_driver_structure(void);
+
+// init sensor
+static void init_bmi160(void);
+
+
+/*
     static functions
 */
 
 // delay ms "function"
-static void task_delay_ms(uint32_t delay_time)
+static void delay_ms_for_bmi160Api(uint32_t delay_time)
 {
     // 延迟可能并不稳定
     // vTaskDelay(pdMS_TO_TICKS(delay_time));
     esp_rom_delay_us(delay_time*1000);
 }
 
-// i2c write function
+// bmi160Api i2c write
 static int8_t i2c_write_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len)
 {
+    ESP_LOGD(log_TAG, "bmi160API write(I2C) dev_addr: %#x, reg_addr: %#x, read_data: %#x, len: %d", dev_addr, reg_addr, *read_data, len);
+    /* TODO imu需要 start-地址-ack-传感器寄存器地址-ack-需要写入的数据-stop
+    但现在只有 start-地址-ack-8bit数据-stop */
     // TODO 现在并没有理会请求的地址
-    ESP_ERROR_CHECK(i2c_master_transmit(i2c_device_handle_1, read_data, len, -1));
+    // ESP_ERROR_CHECK(i2c_master_transmit(i2c_device_handle_1, buffer, len+1, -1));
     return 0;
 }
 
-int8_t i2c_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
+// bmi160Api i2c read
+static int8_t i2c_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
+    ESP_LOGD(log_TAG, "bmi160API read(I2C) dev_addr: %#x, reg_addr: %#x, data: %#x, len: %d", dev_addr, reg_addr, *data, len);
     // TODO 原因与写入函数相同，现在并没有理会请求的地址
-    ESP_ERROR_CHECK(i2c_master_transmit(i2c_device_handle_1, data, len, -1));
+    ESP_ERROR_CHECK(i2c_master_transmit_receive(i2c_device_handle_1, &reg_addr, 1, data, len, -1));
+    return 0;
+}
+
+// bmi160Api spi write
+int8_t spi_write_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint16_t count)
+{
+    return 0;
+}
+
+// bmi160Api spi read
+int8_t spi_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *reg_data, uint16_t count)
+{
     return 0;
 }
 
@@ -87,7 +130,7 @@ static void init_bmi160_sensor_driver_structure()
      * bmi160 function call prototypes */
     bmi160dev.write = i2c_write_for_bmi160Api;
     bmi160dev.read = i2c_read_for_bmi160Api;
-    bmi160dev.delay_ms = task_delay_ms;
+    bmi160dev.delay_ms = delay_ms_for_bmi160Api;
 
     /* set correct i2c address */
     bmi160dev.id = BMI160_DEV_ADDR;
@@ -101,7 +144,7 @@ static void init_bmi160_sensor_driver_structure()
      *  bmi160 function call prototypes */
     bmi160dev.write = coines_write_spi;
     bmi160dev.read = coines_read_spi;
-    bmi160dev.delay_ms = coines_delay_msec;
+    bmi160dev.delay_ms = delay_ms_for_bmi160Api;
     bmi160dev.id = COINES_SHUTTLE_PIN_7;
     bmi160dev.intf = BMI160_SPI_INTF;
 #endif
@@ -146,13 +189,30 @@ static void init_bmi160()
 }
 
 // task function
-void bmi160(void *pvParameters)
+void BMI160_task(void *pvParameters)
 {
-    ESP_LOGI("IMU_BMI160", "BMI160 task test");
+    // TODO 读取传感器信息
+
+    ESP_LOGI("IMU_BMI160", "BMI160 task start");
+    // init imu
     init_bmi160_sensor_driver_structure();
     /* After sensor init introduce 200 msec sleep */
     vTaskDelay(pdMS_TO_TICKS(200));
     init_bmi160();
-    // TODO 读取传感器信息
+
+    int times_to_read = 0;
+    while (times_to_read < 100)
+    {
+        /* To read both Accel and Gyro data */
+        bmi160_get_sensor_data((BMI160_ACCEL_SEL | BMI160_GYRO_SEL), &bmi160_accel, &bmi160_gyro, &bmi160dev);
+
+        ESP_LOGI(log_TAG, "ax:%d\tay:%d\taz:%d\n", bmi160_accel.x, bmi160_accel.y, bmi160_accel.z);
+        ESP_LOGI(log_TAG, "gx:%d\tgy:%d\tgz:%d\n", bmi160_gyro.x, bmi160_gyro.y, bmi160_gyro.z);
+
+        delay_ms_for_bmi160Api(10);
+        times_to_read = times_to_read + 1;
+    }
+
+    ESP_LOGI("IMU_BMI160", "BMI160 task self delete");
     vTaskDelete(NULL);
 }
