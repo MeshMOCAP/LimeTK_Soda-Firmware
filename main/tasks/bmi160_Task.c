@@ -107,8 +107,9 @@ static int8_t spi_write_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_
 // bmi160Api spi read
 static int8_t spi_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
-    ESP_LOGD(logTAG, "reg_addr IS WHAT? 16:%#x 10:%d", reg_addr, reg_addr);
-    ESP_LOGD(logTAG, "SPI2 read: dev_addr:%#x, reg_addr:%#x, data:%#x, len:%d", dev_addr, reg_addr, *data, len);
+    // NOTE: spi 模式下驱动程序会为输入的寄存器地址加上掩码，所以并不会直接与手册中的地址对应
+
+    ESP_LOGD(logTAG, "SPI2 read start: dev_addr:%#x, reg_addr:%#x, data:%#x, len:%d", dev_addr, reg_addr, *data, len);
 
     // spi_read_conf.cmd = reg_addr;
     // spi_read_conf.length = len;
@@ -119,10 +120,11 @@ static int8_t spi_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t
         .rxlength = len,
         .tx_buffer = NULL,
         .rx_buffer = NULL,
-        .rx_data[1] = *data,
-        .flags = SPI_TRANS_USE_RXDATA,
+        .rx_data = {1,2,3,4},
+        .flags = SPI_TRANS_USE_RXDATA | SPI_TRANS_CS_KEEP_ACTIVE,
     };
-    // ESP_ERROR_CHECK(spi_device_transmit(spi_device_handle_1, &spi_read_conf));
+    ESP_ERROR_CHECK(spi_device_transmit(spi_device_handle_1, &spi_read_conf));
+    *data = *(uint32_t*)spi_read_conf.rx_data;
 
     ESP_LOGD(logTAG, "SPI2 read finished: reg_addr:%#x, data:%#x", reg_addr, *data);
 
