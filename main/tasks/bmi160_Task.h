@@ -13,11 +13,13 @@
     local macro definitions
 */
 
-/*! I2C interface communication, 1 - Enable; 0- Disable */
-#define BMI160_INTERFACE_I2C  0
-
-/*! SPI interface communication, 1 - Enable; 0- Disable */
-#define BMI160_INTERFACE_SPI  1
+#if CONFIG_IMU_Protocol
+    /*! I2C interface communication, 1 - Enable; 0- Disable */
+    #define BMI160_INTERFACE_I2C  1
+#else
+    /*! SPI interface communication, 1 - Enable; 0- Disable */
+    #define BMI160_INTERFACE_SPI  1
+#endif
 
 #if (!((BMI160_INTERFACE_I2C == 1) && (BMI160_INTERFACE_SPI == 0)) && \
     (!((BMI160_INTERFACE_I2C == 0) && (BMI160_INTERFACE_SPI == 1))))
@@ -38,5 +40,7 @@ extern i2c_master_dev_handle_t i2c_device_handle_1;
 extern spi_device_handle_t spi_device_handle_1;
 
 
-// task function
+/*
+    task function
+*/
 void BMI160_task(void *pvParameters);

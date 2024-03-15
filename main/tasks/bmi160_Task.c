@@ -64,10 +64,17 @@ static void delay_ms_for_bmi160Api(uint32_t delay_time)
 static int8_t i2c_write_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *read_data, uint16_t len)
 {
     ESP_LOGD(logTAG, "bmi160API write(I2C) dev_addr: %#x, reg_addr: %#x, read_data: %#x, len: %d", dev_addr, reg_addr, *read_data, len);
-    /* TODO imu需要 start-地址-ack-传感器寄存器地址-ack-需要写入的数据-stop
-    但现在只有 start-地址-ack-8bit数据-stop */
+
+    uint8_t *data_buffer = malloc(len + 1);
+    data_buffer[0] = reg_addr;
+    for (int i = 0; i < len; i++) {
+        data_buffer[i + 1] = read_data[i];
+    }
+
     // TODO 现在并没有理会请求的地址
-    // ESP_ERROR_CHECK(i2c_master_transmit(i2c_device_handle_1, buffer, len, -1));
+    // ESP_ERROR_CHECK(i2c_master_transmit(i2c_device_handle_1, &reg_addr, len, -1));
+    ESP_ERROR_CHECK(i2c_master_transmit(i2c_device_handle_1, data_buffer, len + 1, -1));
+    memcpy(read_data, data_buffer, sizeof(data_buffer) * (len + 1));
     return 0;
 }
 
@@ -75,6 +82,7 @@ static int8_t i2c_write_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_
 static int8_t i2c_read_for_bmi160Api(uint8_t dev_addr, uint8_t reg_addr, uint8_t *data, uint16_t len)
 {
     ESP_LOGD(logTAG, "bmi160API read(I2C) dev_addr: %#x, reg_addr: %#x, data: %#x, len: %d", dev_addr, reg_addr, *data, len);
+
     // TODO 原因与写入函数相同，现在并没有理会请求的地址
     ESP_ERROR_CHECK(i2c_master_transmit_receive(i2c_device_handle_1, &reg_addr, 1, data, len, -1));
     return 0;
@@ -212,7 +220,7 @@ void BMI160_task(void *pvParameters)
     vTaskDelay(pdMS_TO_TICKS(200));
     init_bmi160();
 
-    goto selfDelete;
+    // goto selfDelete;
 
     int times_to_read = 0;
     while (times_to_read < 100)
@@ -227,7 +235,7 @@ void BMI160_task(void *pvParameters)
         times_to_read = times_to_read + 1;
     }
 
-    selfDelete:
+    // selfDelete:
     ESP_LOGI("IMU_BMI160", "BMI160 task self delete");
     vTaskDelete(NULL);
 }

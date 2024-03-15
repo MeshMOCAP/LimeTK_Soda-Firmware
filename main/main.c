@@ -86,8 +86,11 @@ static void start_spi(void)
 
 void app_main(void)
 {
-    // start_i2c();
-    start_spi();
+    #if CONFIG_IMU_Protocol
+        start_i2c();
+    #else
+        start_spi();
+    #endif
 
     // Create Queue
     xQueueTrans = xQueueCreate(10, sizeof(POSE_t));

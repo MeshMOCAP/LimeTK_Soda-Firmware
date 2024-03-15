@@ -1,4 +1,8 @@
 menu "LimeTK_Soda"
+    config IMU_Protocol
+        bool "Use I2C protocol with IMU"
+        default true
+
     menu "I2C configs"
         config I2C_ADDR
             hex "I2C device address"
